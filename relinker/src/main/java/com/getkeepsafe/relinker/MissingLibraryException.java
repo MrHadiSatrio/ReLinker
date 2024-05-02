@@ -35,7 +35,7 @@ public class MissingLibraryException extends RuntimeException {
         sb.append("Looked for: ").append(Arrays.toString(wantedABIs)).append(", ");
         sb.append("but only found: ").append(Arrays.toString(abiSupportInfo.getSupportedAbis())).append(".");
 
-        String[] unscannableFileNames = abiSupportInfo.getUnscannableFileNames();
+        String[] unscannableFileNames = abiSupportInfo.getUnscannableFileNameAndReasons();
         if (unscannableFileNames.length != 0) {
             sb.append(" Additionally, encountered errors while scanning: ").append(Arrays.toString(unscannableFileNames)).append(".");
         }

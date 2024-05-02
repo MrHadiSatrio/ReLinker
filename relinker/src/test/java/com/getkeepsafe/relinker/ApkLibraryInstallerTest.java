@@ -95,7 +95,7 @@ public class ApkLibraryInstallerTest {
         try {
             installer.installLibrary(context, abis, "libtest.so", destination, instance);
         } catch (MissingLibraryException e) {
-            assertEquals("Could not find 'libtest.so'. Looked for: [armeabi-v7a], but only found: []. Additionally, encountered errors while scanning: [fake.apk].", e.getMessage());
+            assertEquals("Could not find 'libtest.so'. Looked for: [armeabi-v7a], but only found: []. Additionally, encountered errors while scanning: [fake.apk => java.io.IOException: Could not create zip file.].", e.getMessage());
         }
     }
 

@@ -29,7 +29,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -132,13 +134,13 @@ public class ApkLibraryInstaller implements ReLinker.LibraryInstaller {
         Pattern pattern = Pattern.compile(p);
         ZipFile zipFile;
         Set<String> supportedABIs = new HashSet<String>();
-        Set<File> unscannableFiles = new HashSet<File>();
+        Map<File, Exception> unscannableFiles = new HashMap<File, Exception>();
         for (String sourceDir : sourceDirectories(context)) {
             File source = new File(sourceDir);
             try {
                 zipFile = zipFileFactory.create(source, ZipFile.OPEN_READ);
-            } catch (IOException ignored) {
-                unscannableFiles.add(source);
+            } catch (IOException e) {
+                unscannableFiles.put(source, e);
                 continue;
             }
 
