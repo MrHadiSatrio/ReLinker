@@ -39,6 +39,16 @@ public class ApkLibraryInstaller implements ReLinker.LibraryInstaller {
     private static final int MAX_TRIES = 5;
     private static final int COPY_BUFFER_SIZE = 4096;
 
+    private final ZipFileFactory zipFileFactory;
+
+    ApkLibraryInstaller() {
+        this(new ActualZipFileFactory());
+    }
+
+    ApkLibraryInstaller(ZipFileFactory zipFileFactory) {
+        this.zipFileFactory = zipFileFactory;
+    }
+
     private String[] sourceDirectories(final Context context) {
         final ApplicationInfo appInfo = context.getApplicationInfo();
 
@@ -74,7 +84,7 @@ public class ApkLibraryInstaller implements ReLinker.LibraryInstaller {
             int tries = 0;
             while (tries++ < MAX_TRIES) {
                 try {
-                    zipFile = new ZipFile(new File(sourceDir), ZipFile.OPEN_READ);
+                    zipFile = zipFileFactory.create(new File(sourceDir), ZipFile.OPEN_READ);
                     break;
                 } catch (IOException ignored) {
                 }
@@ -123,7 +133,7 @@ public class ApkLibraryInstaller implements ReLinker.LibraryInstaller {
         Set<String> supportedABIs = new HashSet<String>();
         for (String sourceDir : sourceDirectories(context)) {
             try {
-                zipFile = new ZipFile(new File(sourceDir), ZipFile.OPEN_READ);
+                zipFile = zipFileFactory.create(new File(sourceDir), ZipFile.OPEN_READ);
             } catch (IOException ignored) {
                 continue;
             }
