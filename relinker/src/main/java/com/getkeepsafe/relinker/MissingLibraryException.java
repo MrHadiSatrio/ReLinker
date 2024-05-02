@@ -18,9 +18,28 @@ package com.getkeepsafe.relinker;
 import java.util.Arrays;
 
 public class MissingLibraryException extends RuntimeException {
-    public MissingLibraryException(final String library, final String[] wantedABIs, final String[] supportedABIs) {
-        super("Could not find '" + library + "'. " +
-                "Looked for: " + Arrays.toString(wantedABIs) + ", " +
-                "but only found: " + Arrays.toString(supportedABIs) + ".");
+    private final String library;
+    private final String[] wantedABIs;
+    private final AbiSupportInfo abiSupportInfo;
+
+    public MissingLibraryException(String library, String[] wantedABIs, AbiSupportInfo abiSupportInfo) {
+        this.library = library;
+        this.wantedABIs = wantedABIs;
+        this.abiSupportInfo = abiSupportInfo;
+    }
+
+    @Override
+    public String getMessage() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Could not find '").append(library).append("'. ");
+        sb.append("Looked for: ").append(Arrays.toString(wantedABIs)).append(", ");
+        sb.append("but only found: ").append(Arrays.toString(abiSupportInfo.getSupportedAbis())).append(".");
+
+        String[] unscannableFileNames = abiSupportInfo.getUnscannableFileNames();
+        if (unscannableFileNames.length != 0) {
+            sb.append(" Additionally, encountered errors while scanning: ").append(Arrays.toString(unscannableFileNames)).append(".");
+        }
+
+        return sb.toString();
     }
 }

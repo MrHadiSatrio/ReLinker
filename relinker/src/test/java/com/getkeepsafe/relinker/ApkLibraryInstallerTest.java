@@ -80,6 +80,25 @@ public class ApkLibraryInstallerTest {
         }
     }
 
+    @Test
+    public void throwsMissingLibraryExceptionWhenABIIsMissingAndThereWereUnscannableDirs() throws IOException {
+        final Context context = mock(Context.class);
+        final ApplicationInfo appInfo = mock(ApplicationInfo.class);
+        final ReLinkerInstance instance = mock(ReLinkerInstance.class);
+        final ApkLibraryInstaller installer = new ApkLibraryInstaller(new FaultyZipFileFactory());
+        final File destination = tempFolder.newFile("test");
+        final String[] abis = new String[] {"armeabi-v7a"}; // For unit test running on a developer machine this is normally x86
+
+        when(context.getApplicationInfo()).thenReturn(appInfo);
+        appInfo.sourceDir = getClass().getResource("/fake.apk").getFile();
+
+        try {
+            installer.installLibrary(context, abis, "libtest.so", destination, instance);
+        } catch (MissingLibraryException e) {
+            assertEquals("Could not find 'libtest.so'. Looked for: [armeabi-v7a], but only found: []. Additionally, encountered errors while scanning: [fake.apk].", e.getMessage());
+        }
+    }
+
     private String fileToString(final File file) throws IOException {
         final long size = file.length();
         if (size > Integer.MAX_VALUE) {

@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
@@ -126,15 +127,18 @@ public class ApkLibraryInstaller implements ReLinker.LibraryInstaller {
     // This second loop is more expensive than trying to find a specific ABI, so it should
     // only be ran when no matching libraries are found. This should keep the overhead of
     // the happy path to a minimum.
-    private String[] getSupportedABIs(Context context, String mappedLibraryName) {
+    private AbiSupportInfo getSupportedABIs(Context context, String mappedLibraryName) {
         String p = "lib" + File.separatorChar + "([^\\" + File.separatorChar + "]*)" + File.separatorChar + mappedLibraryName;
         Pattern pattern = Pattern.compile(p);
         ZipFile zipFile;
         Set<String> supportedABIs = new HashSet<String>();
+        Set<File> unscannableFiles = new HashSet<File>();
         for (String sourceDir : sourceDirectories(context)) {
+            File source = new File(sourceDir);
             try {
-                zipFile = zipFileFactory.create(new File(sourceDir), ZipFile.OPEN_READ);
+                zipFile = zipFileFactory.create(source, ZipFile.OPEN_READ);
             } catch (IOException ignored) {
+                unscannableFiles.add(source);
                 continue;
             }
 
@@ -148,8 +152,7 @@ public class ApkLibraryInstaller implements ReLinker.LibraryInstaller {
             }
         }
 
-        String[] result = new String[supportedABIs.size()];
-        return supportedABIs.toArray(result);
+        return new AbiSupportInfo(supportedABIs, unscannableFiles);
     }
 
     /**
@@ -173,14 +176,13 @@ public class ApkLibraryInstaller implements ReLinker.LibraryInstaller {
             if (found == null) {
                 // Does not exist in any APK. Report exactly what ReLinker is looking for and
                 // what is actually supported by the APK.
-                String[] supportedABIs;
+                AbiSupportInfo supportedABIs;
                 try {
                     supportedABIs = getSupportedABIs(context, mappedLibraryName);
                 } catch (Exception e) {
                     // Should never happen as this indicates a bug in ReLinker code, but just to be safe.
                     // User code should only ever crash with a MissingLibraryException if getting this far.
-                    supportedABIs = new String[1];
-                    supportedABIs[0] = e.toString();
+                    supportedABIs = new AbiSupportInfo(Collections.singleton(e.toString()));
                 }
                 throw new MissingLibraryException(mappedLibraryName, abis, supportedABIs);
             }
